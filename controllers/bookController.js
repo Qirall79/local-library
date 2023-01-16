@@ -1,7 +1,9 @@
+const path = require("path");
+
 var Book = require("../models/book");
 var Author = require("../models/author");
 var Genre = require("../models/genre");
-var BookInstance = require("../models/bookinstance");
+var BookInstance = require(path.join(__dirname, "../models/bookinstance"));
 
 const async = require("async");
 const { body, validationResult } = require("express-validator");
