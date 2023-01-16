@@ -169,47 +169,36 @@ exports.bookinstance_update_post = [
     .isISO8601()
     .toDate(),
   (req, res, next) => {
-    async.parallel(
-      {
-        books(callback) {
-          Book.find({}, "title").exec(callback);
-        },
-      },
-      (err, results) => {
-        const errors = validationResult(req);
-        const newInstance = new BookInstance({
-          book: req.body.book,
-          imprint: req.body.imprint,
-          status: req.body.status,
-          due_back: req.body.due_back,
-          _id: req.params.id,
-        });
+    const errors = validationResult(req);
+    const newInstance = new BookInstance({
+      book: req.body.book,
+      imprint: req.body.imprint,
+      status: req.body.status,
+      due_back: req.body.due_back,
+      _id: req.params.id,
+    });
+
+    if (!errors.isEmpty()) {
+      Book.find({}, "title").exec((err, books) => {
         if (err) {
           return next(err);
         }
-        if (!errors.isEmpty()) {
-          res.render("bookinstance_form", {
-            title: "Update Book Instance",
-            book_list: results.books,
-            selected_book: newInstance.book._id,
-            bookinstance: newInstance,
-            options: ["Available", "Maintenance", "Loaned", "Reserved"],
-            selected_status: newInstance.status,
-            errors: errors.array(),
-          });
-        }
-        BookInstance.findByIdAndUpdate(
-          req.params.id,
-          newInstance,
-          {},
-          (err) => {
-            if (err) {
-              return next(err);
-            }
-            res.redirect(newInstance.url);
-          }
-        );
+        res.render("bookinstance_form", {
+          title: "Update Book Instance",
+          book_list: books,
+          selected_book: newInstance.book._id,
+          bookinstance: newInstance,
+          options: ["Available", "Maintenance", "Loaned", "Reserved"],
+          selected_status: newInstance.status,
+          errors: errors.array(),
+        });
+      });
+    }
+    BookInstance.findByIdAndUpdate(req.params.id, newInstance, {}, (err) => {
+      if (err) {
+        return next(err);
       }
-    );
+      res.redirect(newInstance.url);
+    });
   },
 ];
